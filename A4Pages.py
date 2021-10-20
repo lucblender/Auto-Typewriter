@@ -1,9 +1,8 @@
 import copy
-import tabulate
 class A4Page:
     
     column = 65
-    line = 90
+    line = 60
     
     def __init__(self):
         self.page = [[" "]*self.column for i in range(self.line)]
@@ -24,8 +23,6 @@ class A4Page:
     def insert_line(self, char, y):
         for i in range(0, self.column):
             self.page[y][i] = char
-    
-    def insert_table
             
     def __repr__(self):
         temp_page = copy.deepcopy(self.page)

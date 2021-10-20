@@ -5,13 +5,12 @@ import math
  
 from PIL import Image
 
-from KeyDictionnary import keys_set
  
 # gray scale level values from:
 # http://paulbourke.net/dataformats/asciiart/
  
 # 70 levels of gray
-gscale1 = keys_set #"$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
+gscale1 = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
  
 # 10 levels of gray
 gscale2 = '$%M*+?-:. '
@@ -46,7 +45,7 @@ def alpha_to_white(image):
     image.putdata(newData)
     return image
  
-def covertImageToAscii(fileName, cols, scale, moreLevels):
+def convertImageToAscii(image, cols, scale, moreLevels):
     """
     Given Image and dims (rows, cols) returns an m*n list of Images
     """
@@ -54,7 +53,7 @@ def covertImageToAscii(fileName, cols, scale, moreLevels):
     global gscale1, gscale2
  
     # open image and convert to grayscale
-    image = Image.open(fileName)
+    #image = Image.open(fileName)
     
     image = alpha_to_white(image)
     
@@ -123,7 +122,11 @@ def covertImageToAscii(fileName, cols, scale, moreLevels):
             aimg[j] += gsval
      
     # return txt image
-    return aimg
+    to_return = ""
+    for row in (aimg):
+        to_return += (row[::-1] + '\n')
+        
+    return to_return
  
 # main() function
 def main():
@@ -160,7 +163,7 @@ def main():
  
     print('generating ASCII art...')
     # convert image to ascii txt
-    aimg = covertImageToAscii(imgFile, cols, scale, args.moreLevels)
+    aimg = convertImageToAscii(imgFile, cols, scale, args.moreLevels)
  
     # open file
     f = open(outFile, 'w')

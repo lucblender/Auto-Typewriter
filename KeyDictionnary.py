@@ -129,3 +129,11 @@ keys_dict = {
 "£"         :(left_6,	right_6, True),
 "fi"         :(left_6,	right_7, True)
 }
+
+        
+def test_string(string):
+    for char in string:
+        try:
+            keys_dict[char]
+        except:
+            print("error, key not in dict: ", char)
