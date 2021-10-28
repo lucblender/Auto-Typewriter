@@ -47,7 +47,7 @@ while(data[-1] == ['']*7):
     data.pop()
 
 
-table = columnar(data, headers, min_column_width=9, max_column_width=9, terminal_width=65,column_sep='/')
+table = columnar(data, headers, min_column_width=9, max_column_width=9, terminal_width=65,column_sep="'")
 
 
 img = Image.open("Calendar_icon.png")
