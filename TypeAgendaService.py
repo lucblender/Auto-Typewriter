@@ -12,6 +12,7 @@ from A4Pages import A4Page
 
 from AsciiGenerator import convertImageToAscii
 from KeyDictionnary import *
+from AutoTypewriter import AutoTypewriter
 
 page = A4Page()
 
@@ -55,7 +56,7 @@ ascii_img = convertImageToAscii(img, 30, 0.5, False)
 page.insert_text(ascii_img, 30, 1)
 page.insert_line("=", 0)
 page.insert_line("_", 16)
-page.insert_text("Calendar of week "+str(monday.isocalendar().week), 3, 4)
+page.insert_text("Calendar of week "+str(monday.isocalendar()[1]), 3, 4)
 page.insert_text("From "+monday.strftime("%a, the %d %b %Y"), 3, 7)
 page.insert_text("To   "+sunday.strftime("%a, the %d %b %Y"), 3, 8)
 page.insert_text("_"*25, 3, 10)
@@ -68,7 +69,9 @@ split_table = table.splitlines()
 
 page.insert_line("=", 18+len(split_table)+2)
 
-test_string(str(page))
-
 print(str(page))
+test_string(str(page))
+auto_typewriter = AutoTypewriter()
+auto_typewriter.press_string(str(page))
+
 

@@ -20,6 +20,8 @@ right_6 = 24
 right_7 = 23 
 right_8 = 25 
 
+PRESS_TIME = 0.05
+
 class AutoTypewriter():
     def __init__(self):
 
@@ -45,21 +47,37 @@ class AutoTypewriter():
         GPIO.setup(right_8, GPIO.OUT, initial=1)
 
     def press_key(self, keys):
-        emit, receive, shift_pressed = keys
+        emit, receive, shift_pressed, code_pressed = keys
         if shift_pressed:
-            emit_shift, receive_shift, shift_pressed = keys_dict["shift"]        
+            emit_shift, receive_shift, shift_pressed_shift, code_pressed_shift = keys_dict["shift"]   
+            emit_shift_lck, receive_shift_lck, shift_pressed_shift_lck, code_pressed_shift_lck = keys_dict["shiftlock"]        
             before = time()
-            while(time()-before < 0.05):
-                GPIO.output(receive_shift, GPIO.input(emit_shift))            
+            while(time()-before < PRESS_TIME):
+                GPIO.output(receive_shift_lck, GPIO.input(emit_shift_lck))   
+            GPIO.output(receive_shift_lck, 1)                
             before = time()
-            while(time()-before < 0.1):
-                GPIO.output(receive_shift, GPIO.input(emit_shift))
-                GPIO.output(receive, GPIO.input(emit))
-            GPIO.output(receive_shift, 1)
+            while(time()-before < PRESS_TIME):
+                GPIO.output(receive, GPIO.input(emit))                
             GPIO.output(receive, 1)
+            before = time()
+            while(time()-before < PRESS_TIME):
+                GPIO.output(receive_shift, GPIO.input(emit_shift))
+            GPIO.output(receive_shift, 1)
+            sleep(PRESS_TIME*1)
+        elif code_pressed:
+            emit_code, receive_code, shift_pressed_code, code_pressed_code = keys_dict["unknown_6"]        
+            before = time()
+            while(time()-before < PRESS_TIME):
+                GPIO.output(receive_code, GPIO.input(emit_code))            
+            before = time()
+            while(time()-before < PRESS_TIME):
+                GPIO.output(receive, GPIO.input(emit))
+            GPIO.output(receive_code, 1)
+            GPIO.output(receive, 1)
+            sleep(PRESS_TIME)
         else:
             before = time()
-            while(time()-before < 0.1):
+            while(time()-before < PRESS_TIME):
                 GPIO.output(receive, GPIO.input(emit))
             GPIO.output(receive, 1)
         sleep(0.1)
