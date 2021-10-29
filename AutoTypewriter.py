@@ -12,13 +12,13 @@ left_7 = 20
 left_8 = 21
 
 right_1 = 4
-right_2 = 17 
-right_3 = 18 
-right_4 = 27 
-right_5 = 22 
-right_6 = 24 
-right_7 = 23 
-right_8 = 25 
+right_2 = 17
+right_3 = 18
+right_4 = 27
+right_5 = 22
+right_6 = 24
+right_7 = 23
+right_8 = 25
 
 PRESS_TIME = 0.05
 
@@ -49,15 +49,15 @@ class AutoTypewriter():
     def press_key(self, keys):
         emit, receive, shift_pressed, code_pressed = keys
         if shift_pressed:
-            emit_shift, receive_shift, shift_pressed_shift, code_pressed_shift = keys_dict["shift"]   
-            emit_shift_lck, receive_shift_lck, shift_pressed_shift_lck, code_pressed_shift_lck = keys_dict["shiftlock"]        
+            emit_shift, receive_shift, shift_pressed_shift, code_pressed_shift = keys_dict["shift"]
+            emit_shift_lck, receive_shift_lck, shift_pressed_shift_lck, code_pressed_shift_lck = keys_dict["shiftlock"]
             before = time()
             while(time()-before < PRESS_TIME):
-                GPIO.output(receive_shift_lck, GPIO.input(emit_shift_lck))   
-            GPIO.output(receive_shift_lck, 1)                
+                GPIO.output(receive_shift_lck, GPIO.input(emit_shift_lck))
+            GPIO.output(receive_shift_lck, 1)
             before = time()
             while(time()-before < PRESS_TIME):
-                GPIO.output(receive, GPIO.input(emit))                
+                GPIO.output(receive, GPIO.input(emit))
             GPIO.output(receive, 1)
             before = time()
             while(time()-before < PRESS_TIME):
@@ -65,10 +65,10 @@ class AutoTypewriter():
             GPIO.output(receive_shift, 1)
             sleep(PRESS_TIME*1)
         elif code_pressed:
-            emit_code, receive_code, shift_pressed_code, code_pressed_code = keys_dict["unknown_6"]        
+            emit_code, receive_code, shift_pressed_code, code_pressed_code = keys_dict["unknown_6"]
             before = time()
             while(time()-before < PRESS_TIME):
-                GPIO.output(receive_code, GPIO.input(emit_code))            
+                GPIO.output(receive_code, GPIO.input(emit_code))
             before = time()
             while(time()-before < PRESS_TIME):
                 GPIO.output(receive, GPIO.input(emit))
@@ -82,8 +82,34 @@ class AutoTypewriter():
             GPIO.output(receive, 1)
         sleep(0.1)
 
+    def underline_press_key(self, keys):
+        press_key(keys)
+        press_key("return")
+        press_key("_")
+
     def press_string(self, string):
         for char in string:
             self.press_key(keys_dict[char])
-        
+
+    # use  '__' to delimit
+    def underline_delimiter_press_string(self, string):
+        last_char = ""
+        underline_enabled = False
+
+        str_index  = 0
+        while str_index < len(string):
+            if string[str_index] == "_" and i+1 < len(string) and string[str_index+1] == "_":
+                underline_enabled = not(underline_enabled)
+                str_index+=2
+            else:
+                if underline_enabled:
+                    self.press_key(keys_dict[string[str_index]])
+                else:
+                    self.underline_press_key(keys_dict[string[str_index]])
+            str_index +=1
+
+    def underline_press_string(self, string):
+        for char in string:
+            self.underline_press_key(keys_dict[char])
+
 
