@@ -83,29 +83,30 @@ class AutoTypewriter():
         sleep(0.1)
 
     def underline_press_key(self, keys):
-        press_key(keys)
-        press_key("return")
-        press_key("_")
+        self.press_key(keys)
+        self.press_key(keys_dict["return"])
+        self.press_key(keys_dict["return"])
+        self.press_key(keys_dict["_"])
 
     def press_string(self, string):
         for char in string:
             self.press_key(keys_dict[char])
 
-    # use  '__' to delimit
+    # use  '@@' to delimit
     def underline_delimiter_press_string(self, string):
         last_char = ""
         underline_enabled = False
 
         str_index  = 0
         while str_index < len(string):
-            if string[str_index] == "_" and i+1 < len(string) and string[str_index+1] == "_":
+            if string[str_index] == "@" and str_index+1 < len(string) and string[str_index+1] == "@":
                 underline_enabled = not(underline_enabled)
-                str_index+=2
+                str_index+=1
             else:
                 if underline_enabled:
-                    self.press_key(keys_dict[string[str_index]])
-                else:
                     self.underline_press_key(keys_dict[string[str_index]])
+                else:
+                    self.press_key(keys_dict[string[str_index]])
             str_index +=1
 
     def underline_press_string(self, string):

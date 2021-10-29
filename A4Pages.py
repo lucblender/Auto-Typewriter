@@ -27,7 +27,7 @@ class A4Page:
             index_x  = 0
             str_index  = 0
             while str_index < len(line):
-                if line[str_index] == "_" and str_index+1 < len(line) and line[str_index+1] == "_":
+                if line[str_index] == "@" and str_index+1 < len(line) and line[str_index+1] == "@":
                     self.page[index_y+y][index_x+x] = line[str_index]+line[str_index+1]
                     try:
                         self.page[index_y+y][index_x+x] += line[str_index+2]
@@ -43,6 +43,28 @@ class A4Page:
     def insert_line(self, char, y):
         for i in range(0, self.column):
             self.page[y][i] = char
+            
+    def beautiful_print(self):
+        unformated_str = str(self)
+        formated_str = ""
+        even = True
+        str_index  = 0
+        while str_index < len(unformated_str):
+            if unformated_str[str_index] == "@" and str_index+1 < len(unformated_str) and unformated_str[str_index+1] == "@":
+                if even:
+                    formated_str+="\033[4m"
+                else:
+                    formated_str+="\033[0m"
+                even = not(even)
+                str_index+=1
+            else:
+                formated_str+=unformated_str[str_index]
+            
+            str_index+=1
+                
+        
+        
+        return formated_str
 
     def __repr__(self):
         temp_page = copy.deepcopy(self.page)
