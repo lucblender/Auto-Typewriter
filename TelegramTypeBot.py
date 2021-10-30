@@ -16,7 +16,7 @@ A few commands are implemented : \n \
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
 
-updater = Updater(token='', use_context=True)
+updater = Updater(token='2065140059:AAElu6tNyGUUZwNkAAv4p2Q_j1-0Rhhrfwg', use_context=True)
 
 dispatcher = updater.dispatcher
 
