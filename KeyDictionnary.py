@@ -140,3 +140,14 @@ def test_string(string):
             keys_dict[char]
         except:
             print("error, key not in dict: ", char)
+
+        
+def correct_string(string):
+    to_return = ""
+    for char in string:
+        try:
+            keys_dict[char]
+            to_return+=char
+        except:
+            to_return+="?"
+    return to_return
