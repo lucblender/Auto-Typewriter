@@ -7,6 +7,8 @@ from KeyDictionnary import correct_string
 from AsciiGenerator import convertImageToAscii
 from PIL import Image
 from TelegramData import *
+from TypeMeteoService import typeMeteoService
+from TypeAgendaService import typeAgendaService
 
 autoTypewriter = AutoTypewriter()
 
@@ -51,13 +53,21 @@ def meteo(update, context):
     if update.effective_user.id not in TELEGRAM_WHITE_LIST:
         context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error) 
     else:
-        context.bot.send_message(chat_id=update.effective_chat.id, text="calm down, still need to implement this")
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Retrieving meteo Info")
+        text = typeMeteoService()
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Starting to print the meteo on typewriter!")
+        autoTypewriter.underline_delimiter_press_string(text)
+        context.bot.send_message(chat_id=update.effective_chat.id, text="The meteo has been printed!")
     
 def calendar(update, context):
     if update.effective_user.id not in TELEGRAM_WHITE_LIST:
         context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error) 
     else:
-        context.bot.send_message(chat_id=update.effective_chat.id, text="calm down, still need to implement this")
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Retrieving calendar Info")
+        text = typeAgendaService()
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Starting to print the calendar on typewriter!")
+        autoTypewriter.press_string(text)
+        context.bot.send_message(chat_id=update.effective_chat.id, text="The calendar has been printed!")
 
 def print_picture(update, context):  
     if update.effective_user.id not in TELEGRAM_WHITE_LIST:
@@ -68,7 +78,7 @@ def print_picture(update, context):
         ascii_img = convertImageToAscii(img, 45, 0.5, False)
         context.bot.send_message(chat_id=update.effective_chat.id, text="Sending the last received picture to the typewriter!")
         print(ascii_img)
-        #autoTypewriter.press_string(ascii_img)
+        autoTypewriter.press_string(ascii_img)
         context.bot.send_message(chat_id=update.effective_chat.id, text="Picture Printed")
 
 def start_type(update, context):
