@@ -97,6 +97,8 @@ class AutoTypewriter():
         self.running = True
         for char in string:
             if self.cancel_action:
+                self.cancel_action = False
+                print("Break press_string")
                 break
             self.press_key(keys_dict[char])
         self.running = False
@@ -105,9 +107,14 @@ class AutoTypewriter():
     def underline_delimiter_press_string(self, string):
         last_char = ""
         underline_enabled = False
+        self.running = True
 
         str_index  = 0
-        while str_index < len(string):
+        while str_index < len(string):            
+            if self.cancel_action:
+                self.cancel_action = False
+                print("Break underline_delimiter_press_string")
+                break
             if string[str_index] == "@" and str_index+1 < len(string) and string[str_index+1] == "@":
                 underline_enabled = not(underline_enabled)
                 str_index+=1
@@ -117,17 +124,21 @@ class AutoTypewriter():
                 else:
                     self.press_key(keys_dict[string[str_index]])
             str_index +=1
+        
+        self.running = False
 
     def underline_press_string(self, string):
         self.running = True
         for char in string:
             if self.cancel_action:
+                self.cancel_action = False
+                print("Break underline_press_string")
                 break
             self.underline_press_key(keys_dict[char])
         self.running = False
 
     def wait_cancel_thread(self):
-        if t != None:
+        if self.t != None:
             self.cancel_action = True
             while(self.t.is_alive()):
                 sleep(0.1)
@@ -138,15 +149,16 @@ class AutoTypewriter():
         self.t = threading.Thread(target=self.press_string, args=(string,))
         self.t.start()
 
-    def threaded_underline_press_string(self, string):
+    def threaded_underline_delimiter_press_string(self, string):
         self.wait_cancel_thread()
         self.cancel_action = False
-        self.t = threading.Thread(target=self.underline_press_string, args=(string,))
+        self.t = threading.Thread(target=self.underline_delimiter_press_string, args=(string,))
         self.t.start()
 
     def cancel(self):
-        if t != None and t.is_alive():
+        if self.t != None and self.t.is_alive():
             self.cancel_action = True
+            print("Cancel action")
 
 
 

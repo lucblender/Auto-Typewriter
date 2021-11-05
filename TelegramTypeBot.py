@@ -10,6 +10,7 @@ from TelegramData import *
 from TypeMeteoService import typeMeteoService
 from TypeAgendaService import typeAgendaService
 import threading
+from time import sleep
 
 autoTypewriter = AutoTypewriter()
 
@@ -26,6 +27,16 @@ A few commands are implemented : \n \
 /cancel : stop /meteo, /calendar and /print_picture\n"
 
 white_list_error = "Oops you're not in the whitelist, contact the bot dev if you wanna be in!"
+
+admin_start = "Also, you look like an admin to me, try /admin_help for more stuff!"
+
+unknown_command_error = "Oops, I don't know this command..."
+
+admin_help_text = "Hi my dear Admin, here is a little reminder of what you can do:\n\n\
+ /add_id id_number : add the id to the user whitelist (longclick on this since need parameter)\n\
+/remove_id id_number : remove the id to the user whitelist(longclick on this since need parameter)\n\
+/list_id : display the whitelist list\n\
+As a reminder, id manipulation are effective only in a bot session, whitelistedid will be lost on a reboot except if they are part of hardcoded whitelist."
 
 running_service = ""
 cancel_action = False
@@ -49,6 +60,7 @@ def threaded_callback_service_finished(context, start_chat_id):
         sleep(0.5)
     if cancel_action:
         context.bot.send_message(chat_id=start_chat_id, text="The {} service got canceled!".format(running_service))
+        autoTypewriter.press_string("\n")
         cancel_action = False
     else:
         context.bot.send_message(chat_id=start_chat_id, text="The {} service just finished!".format(running_service))
@@ -58,13 +70,73 @@ def help_display(update, context):
         context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text=help_text)
+        if update.effective_chat.id == ADMIN_ID:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=admin_start)
+
+def add_id(update, context):
+    if update.effective_user.id not in TELEGRAM_WHITE_LIST:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
+    else:
+        if update.effective_chat.id == ADMIN_ID:
+            try:
+                telegram_id = int(context.args[0])
+                TELEGRAM_WHITE_LIST.append(telegram_id)
+                context.bot.send_message(chat_id=update.effective_chat.id, text="Id {} added".format(telegram_id))
+            except (IndexError, ValueError):
+                context.bot.send_message(chat_id=update.effective_chat.id, text="You forgot to put an id or it wasn't a number")
+        else:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=unknown_command_error)
+
+def remove_id(update, context):
+    if update.effective_user.id not in TELEGRAM_WHITE_LIST:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
+    else:
+        if update.effective_chat.id == ADMIN_ID:
+            try:
+                telegram_id = int(context.args[0])
+                TELEGRAM_WHITE_LIST.remove(telegram_id)
+                context.bot.send_message(chat_id=update.effective_chat.id, text="Id {} removed".format(telegram_id))
+            except (IndexError, ValueError):
+                context.bot.send_message(chat_id=update.effective_chat.id, text="You forgot to put an id or it wasn't a number")
+        else:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=unknown_command_error)
+
+def list_id(update, context):
+    if update.effective_user.id not in TELEGRAM_WHITE_LIST:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
+    else:
+        if update.effective_chat.id == ADMIN_ID:
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Here are the current whitelisted id:")
+            for telegram_id in TELEGRAM_WHITE_LIST:
+                context.bot.send_message(chat_id=update.effective_chat.id, text="- "+str(telegram_id))
+        else:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=unknown_command_error)
+
+def admin_help_display(update, context):
+    if update.effective_user.id not in TELEGRAM_WHITE_LIST:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
+    else:
+        if update.effective_chat.id == ADMIN_ID:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=admin_help_text)
+        else:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=unknown_command_error)
+
+def unknown_command(update, context):
+    if update.effective_user.id not in TELEGRAM_WHITE_LIST:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=unknown_command_error)
 
 def start(update, context):
     if update.effective_user.id not in TELEGRAM_WHITE_LIST:
         context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
         context.bot.send_message(chat_id=ADMIN_ID, text="New connection from someone not in the whitelist\nID: {} \nFistName: {}\nLastName: {}".format(update.effective_chat.id,update.effective_chat.first_name,update.effective_chat.last_name))
+        context.bot.send_message(chat_id=ADMIN_ID, text="add it to the whitelist with :"))
+        context.bot.send_message(chat_id=ADMIN_ID, text="/add_id {}".format(update.effective_chat.id))
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text=help_text)
+        if update.effective_chat.id == ADMIN_ID:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=admin_start)
 
 def meteo(update, context):
     global running_service
@@ -143,7 +215,7 @@ def stop_type(update, context):
             ECHO_ENABLED = False
             context.bot.send_message(chat_id=update.effective_chat.id, text="Echo typing is disabled on the typewriter")
 
-def cancel_handler(update, context):
+def cancel(update, context):
     global running_service, cancel_action
     if update.effective_user.id not in TELEGRAM_WHITE_LIST:
         context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
@@ -151,6 +223,7 @@ def cancel_handler(update, context):
         if autoTypewriter.running:
             context.bot.send_message(chat_id=update.effective_chat.id, text="Cancelling the {} service".format(running_service))
             cancel_action = True
+            autoTypewriter.cancel()
         else:
             context.bot.send_message(chat_id=update.effective_chat.id, text="No service do cancel apparently")
 
@@ -181,6 +254,18 @@ def simple_text(update, context):
 help_handler = CommandHandler('help', help_display)
 dispatcher.add_handler(help_handler)
 
+admin_help_handler = CommandHandler('admin_help', admin_help_display)
+dispatcher.add_handler(admin_help_handler)
+
+add_id_handler = CommandHandler('add_id', add_id)
+dispatcher.add_handler(add_id_handler)
+
+remove_id_handler = CommandHandler('remove_id', remove_id)
+dispatcher.add_handler(remove_id_handler)
+
+list_id_handler = CommandHandler('list_id', list_id)
+dispatcher.add_handler(list_id_handler)
+
 start_handler = CommandHandler('start', start)
 dispatcher.add_handler(start_handler)
 
@@ -204,6 +289,9 @@ dispatcher.add_handler(cancel_handler)
 
 simple_text_handler = MessageHandler(Filters.text & (~Filters.command), simple_text)
 dispatcher.add_handler(simple_text_handler)
+
+unknown_command_handler = MessageHandler(Filters.command, unknown_command)
+dispatcher.add_handler(unknown_command_handler)
 
 updater.dispatcher.add_handler(MessageHandler(Filters.photo, image_handler))
 updater.start_polling()
