@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 from time import sleep, time
 from KeyDictionnary import keys_dict, test_string
+import threading
 
 left_1 = 5
 left_2 = 6
@@ -46,6 +47,10 @@ class AutoTypewriter():
         GPIO.setup(right_7, GPIO.OUT, initial=1)
         GPIO.setup(right_8, GPIO.OUT, initial=1)
 
+        self.cancel_action = False
+        self.running = False
+        self.t = None
+
     def press_key(self, keys):
         emit, receive, shift_pressed, code_pressed = keys
         if shift_pressed:
@@ -89,8 +94,12 @@ class AutoTypewriter():
         self.press_key(keys_dict["_"])
 
     def press_string(self, string):
+        self.running = True
         for char in string:
+            if self.cancel_action:
+                break
             self.press_key(keys_dict[char])
+        self.running = False
 
     # use  '@@' to delimit
     def underline_delimiter_press_string(self, string):
@@ -110,7 +119,34 @@ class AutoTypewriter():
             str_index +=1
 
     def underline_press_string(self, string):
+        self.running = True
         for char in string:
+            if self.cancel_action:
+                break
             self.underline_press_key(keys_dict[char])
+        self.running = False
+
+    def wait_cancel_thread(self):
+        if t != None:
+            self.cancel_action = True
+            while(self.t.is_alive()):
+                sleep(0.1)
+
+    def threaded_press_string(self, string):
+        self.wait_cancel_thread()
+        self.cancel_action = False
+        self.t = threading.Thread(target=self.press_string, args=(string,))
+        self.t.start()
+
+    def threaded_underline_press_string(self, string):
+        self.wait_cancel_thread()
+        self.cancel_action = False
+        self.t = threading.Thread(target=self.underline_press_string, args=(string,))
+        self.t.start()
+
+    def cancel(self):
+        if t != None and t.is_alive():
+            self.cancel_action = True
+
 
 

@@ -9,6 +9,7 @@ from PIL import Image
 from TelegramData import *
 from TypeMeteoService import typeMeteoService
 from TypeAgendaService import typeAgendaService
+import threading
 
 autoTypewriter = AutoTypewriter()
 
@@ -21,9 +22,15 @@ A few commands are implemented : \n \
 /calendar : will print your current week on google calendar\n\
 /print_picture : will print the last sent picture in ascii art\n\
 /start_type : start echo typing on the typewriter\n\
-/stop_type :  stop echo typing on the typewriter\n"
+/stop_type :  stop echo typing on the typewriter\n\
+/cancel : stop /meteo, /calendar and /print_picture\n"
 
 white_list_error = "Oops you're not in the whitelist, contact the bot dev if you wanna be in!"
+
+running_service = ""
+cancel_action = False
+
+running_service_string = lambda : "Oops the {} service is already running on the typewriter. You can use /cancel to stop it".format(running_service)
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -36,83 +43,134 @@ dispatcher = updater.dispatcher
 ECHO_ENABLED = False
 PICTURE_NAME = "Telegram_picture.png"
 
-def help_display(update, context):    
+def threaded_callback_service_finished(context, start_chat_id):
+    global cancel_action
+    while(autoTypewriter.running and cancel_action == False):
+        sleep(0.5)
+    if cancel_action:
+        context.bot.send_message(chat_id=start_chat_id, text="The {} service got canceled!".format(running_service))
+        cancel_action = False
+    else:
+        context.bot.send_message(chat_id=start_chat_id, text="The {} service just finished!".format(running_service))
+
+def help_display(update, context):
     if update.effective_user.id not in TELEGRAM_WHITE_LIST:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error) 
+        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text=help_text)
- 
+
 def start(update, context):
     if update.effective_user.id not in TELEGRAM_WHITE_LIST:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error) 
-        context.bot.send_message(chat_id=ADMIN_ID, text="New connection from someone not in the whitelist\nID: {} \nFistName: {}\nLastName: {}".format(update.effective_chat.id,update.effective_chat.first_name,update.effective_chat.last_name)) 
+        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
+        context.bot.send_message(chat_id=ADMIN_ID, text="New connection from someone not in the whitelist\nID: {} \nFistName: {}\nLastName: {}".format(update.effective_chat.id,update.effective_chat.first_name,update.effective_chat.last_name))
     else:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=help_text) 
-    
-def meteo(update, context):
-    if update.effective_user.id not in TELEGRAM_WHITE_LIST:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error) 
-    else:
-        context.bot.send_message(chat_id=update.effective_chat.id, text="Retrieving meteo Info")
-        text = typeMeteoService()
-        context.bot.send_message(chat_id=update.effective_chat.id, text="Starting to print the meteo on typewriter!")
-        autoTypewriter.underline_delimiter_press_string(text)
-        context.bot.send_message(chat_id=update.effective_chat.id, text="The meteo has been printed!")
-    
-def calendar(update, context):
-    if update.effective_user.id not in TELEGRAM_WHITE_LIST:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error) 
-    else:
-        context.bot.send_message(chat_id=update.effective_chat.id, text="Retrieving calendar Info")
-        text = typeAgendaService()
-        context.bot.send_message(chat_id=update.effective_chat.id, text="Starting to print the calendar on typewriter!")
-        autoTypewriter.press_string(text)
-        context.bot.send_message(chat_id=update.effective_chat.id, text="The calendar has been printed!")
+        context.bot.send_message(chat_id=update.effective_chat.id, text=help_text)
 
-def print_picture(update, context):  
+def meteo(update, context):
+    global running_service
     if update.effective_user.id not in TELEGRAM_WHITE_LIST:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error) 
-    else:   
-        img = Image.open(PICTURE_NAME)
-        context.bot.send_message(chat_id=update.effective_chat.id, text="Converting the last received picture Ascii art")
-        ascii_img = convertImageToAscii(img, 45, 0.5, False)
-        context.bot.send_message(chat_id=update.effective_chat.id, text="Sending the last received picture to the typewriter!")
-        print(ascii_img)
-        autoTypewriter.press_string(ascii_img)
-        context.bot.send_message(chat_id=update.effective_chat.id, text="Picture Printed")
+        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
+    else:
+        if autoTypewriter.running:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=running_service_string())
+        else:
+            running_service = "meteo"
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Retrieving meteo Info")
+            text = typeMeteoService()
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Starting to print the meteo on typewriter!")
+            autoTypewriter.threaded_underline_delimiter_press_string(text)
+            t = threading.Thread(target=threaded_callback_service_finished, args=(context,update.effective_chat.id))
+            t.start()
+            context.bot.send_message(chat_id=update.effective_chat.id, text="The meteo has been sent to printer!")
+
+def calendar(update, context):
+    global running_service
+    if update.effective_user.id not in TELEGRAM_WHITE_LIST:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
+    else:
+        if autoTypewriter.running:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=running_service_string())
+        else:
+            running_service = "calendar"
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Retrieving calendar Info")
+            text = typeAgendaService()
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Starting to print the calendar on typewriter!")
+            autoTypewriter.threaded_press_string(text)
+            t = threading.Thread(target=threaded_callback_service_finished, args=(context,update.effective_chat.id))
+            t.start()
+            context.bot.send_message(chat_id=update.effective_chat.id, text="The calendar has been sent to printer!")
+
+def print_picture(update, context):
+    global running_service
+    if update.effective_user.id not in TELEGRAM_WHITE_LIST:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
+    else:
+        if autoTypewriter.running:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=running_service_string())
+        else:
+            running_service = "picture printing"
+            img = Image.open(PICTURE_NAME)
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Converting the last received picture Ascii art")
+            ascii_img = convertImageToAscii(img, 45, 0.5, False)
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Sending the last received picture to the typewriter!")
+            print(ascii_img)
+            autoTypewriter.threaded_press_string(ascii_img)
+            t = threading.Thread(target=threaded_callback_service_finished, args=(context,update.effective_chat.id))
+            t.start()
+            context.bot.send_message(chat_id=update.effective_chat.id, text="The picture is printing")
 
 def start_type(update, context):
     global ECHO_ENABLED
-    
+
     if update.effective_user.id not in TELEGRAM_WHITE_LIST:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error) 
+        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
     else:
-        ECHO_ENABLED = True
-        context.bot.send_message(chat_id=update.effective_chat.id, text="Echo typing is enabled on the typewriter")
+        if autoTypewriter.running:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=running_service_string())
+        else:
+            ECHO_ENABLED = True
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Echo typing is enabled on the typewriter")
 
 def stop_type(update, context):
     global ECHO_ENABLED
-    
+
     if update.effective_user.id not in TELEGRAM_WHITE_LIST:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error) 
+        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
     else:
-        ECHO_ENABLED = False
-        context.bot.send_message(chat_id=update.effective_chat.id, text="Echo typing is disabled on the typewriter")
+        if autoTypewriter.running:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=running_service_string())
+        else:
+            ECHO_ENABLED = False
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Echo typing is disabled on the typewriter")
+
+def cancel_handler(update, context):
+    global running_service, cancel_action
+    if update.effective_user.id not in TELEGRAM_WHITE_LIST:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
+    else:
+        if autoTypewriter.running:
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Cancelling the {} service".format(running_service))
+            cancel_action = True
+        else:
+            context.bot.send_message(chat_id=update.effective_chat.id, text="No service do cancel apparently")
+
+
+
 
 def image_handler(update, context):
     if update.effective_user.id not in TELEGRAM_WHITE_LIST:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error) 
+        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
     else:
         file = context.bot.getFile(update.message.photo[-1].file_id)
         print ("file_id: " + str(update.message.photo[-1].file_id))
         file.download(PICTURE_NAME)
         context.bot.send_message(chat_id=update.effective_chat.id, text="The picture has been saved! Wanna print it? /print_picture if so!")
- 
+
 def simple_text(update, context):
     global ECHO_ENABLED
-    
+
     if update.effective_user.id not in TELEGRAM_WHITE_LIST:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error) 
+        context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
     else:
         if ECHO_ENABLED:
             text = correct_string(update.message.text)+"\n"
@@ -140,6 +198,9 @@ dispatcher.add_handler(stop_type_handler)
 
 print_picture_handler = CommandHandler('print_picture', print_picture)
 dispatcher.add_handler(print_picture_handler)
+
+cancel_handler = CommandHandler('cancel', cancel)
+dispatcher.add_handler(cancel_handler)
 
 simple_text_handler = MessageHandler(Filters.text & (~Filters.command), simple_text)
 dispatcher.add_handler(simple_text_handler)
