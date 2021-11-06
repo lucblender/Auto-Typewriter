@@ -108,7 +108,7 @@ def list_id(update, context):
         if update.effective_chat.id == ADMIN_ID:
             context.bot.send_message(chat_id=update.effective_chat.id, text="Here are the current whitelisted id:")
             for telegram_id in TELEGRAM_WHITE_LIST:
-                context.bot.send_message(chat_id=update.effective_chat.id, text="- "+str(telegram_id))
+                context.bot.send_message(chat_id=update.effective_chat.id, text=str(telegram_id))
         else:
             context.bot.send_message(chat_id=update.effective_chat.id, text=unknown_command_error)
 
@@ -131,7 +131,7 @@ def start(update, context):
     if update.effective_user.id not in TELEGRAM_WHITE_LIST:
         context.bot.send_message(chat_id=update.effective_chat.id, text=white_list_error)
         context.bot.send_message(chat_id=ADMIN_ID, text="New connection from someone not in the whitelist\nID: {} \nFistName: {}\nLastName: {}".format(update.effective_chat.id,update.effective_chat.first_name,update.effective_chat.last_name))
-        context.bot.send_message(chat_id=ADMIN_ID, text="add it to the whitelist with :"))
+        context.bot.send_message(chat_id=ADMIN_ID, text="Add it to the whitelist with :")
         context.bot.send_message(chat_id=ADMIN_ID, text="/add_id {}".format(update.effective_chat.id))
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text=help_text)
