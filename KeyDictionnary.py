@@ -1,3 +1,5 @@
+from unicodedata import normalize
+
 left_1 = 5
 left_2 = 6
 left_3 = 13
@@ -54,14 +56,14 @@ keys_dict = {
 "o"         :(left_5,	right_3, False, False),
 "p"         :(left_5,	right_4, False, False),
 "l"         :(left_5,	right_5, False, False),
-"é"         :(left_5,	right_6, False, False),
+"ö"         :(left_5,	right_6, False, False),
 "."         :(left_5,	right_7, False, False),
 "-"         :(left_5,	right_8, False, False),
 "'"         :(left_6,	right_1, False, False),
 "^"         :(left_6,	right_2, False, False),
-"è"         :(left_6,	right_3, False, False),
+"ü"         :(left_6,	right_3, False, False),
 "¨"         :(left_6,	right_4, False, False),
-"à"         :(left_6,	right_5, False, False),
+"ä"         :(left_6,	right_5, False, False),
 "$"         :(left_6,	right_6, False, False),
 "§"         :(left_6,	right_7, False, False),
 "¨withspace":(left_6,	right_8, False, False),
@@ -118,14 +120,14 @@ keys_dict = {
 "O"         :(left_5,	right_3, True, False),
 "P"         :(left_5,	right_4, True, False),
 "L"         :(left_5,	right_5, True, False),
-"ö"         :(left_5,	right_6, True, False),
+"é"         :(left_5,	right_6, True, False),
 ":"         :(left_5,	right_7, True, False),
 "_"         :(left_5,	right_8, True, False),
 "?"         :(left_6,	right_1, True, False),
 "`"         :(left_6,	right_2, True, False),
-"ü"         :(left_6,	right_3, True, False),
+"è"         :(left_6,	right_3, True, False),
 "´"         :(left_6,	right_4, True, False),
-"ä"         :(left_6,	right_5, True, False),
+"à"         :(left_6,	right_5, True, False),
 "£"         :(left_6,	right_6, True, False),
 "fi"        :(left_6,	right_7, True, False),
 "°"         :(left_2,	right_8, False, True),
@@ -142,12 +144,20 @@ def test_string(string):
             print("error, key not in dict: ", char)
 
         
-def correct_string(string):
+def correct_string(string, contain_delimiter = True):
     to_return = ""
     for char in string:
-        try:
-            keys_dict[char]
+        if contain_delimiter and char == "@":
             to_return+=char
-        except:
-            to_return+="?"
+        else:
+            try:
+                keys_dict[char]
+                to_return+=char
+            except:
+                try:
+                    new_char = normalize('NFD', char).encode('ascii', 'ignore').decode("utf-8")
+                    keys_dict[new_char]
+                    to_return+=new_char
+                except:
+                    to_return+="?"
     return to_return

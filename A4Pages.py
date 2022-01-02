@@ -19,6 +19,18 @@ class A4Page:
                 self.page[index_y+y][index_x+x] = char
                 index_x += 1
             index_y += 1
+            
+    def insert_text_ralign(self, text, y):
+        self.insert_text(text, self.column-1-len(text), y)
+            
+    def insert_delimiter_text_ralign(self, text, y):
+        self.insert_delimiter_text(text, self.column-1-len(text), y)
+            
+    def insert_text_calign(self, text, y):
+        self.insert_text(text, int((self.column-len(text))/2), y)
+            
+    def insert_delimiter_text_calign(self, text, y):
+        self.insert_delimiter_text(text, int((self.column-len(text))/2), y)
 
     def insert_delimiter_text(self, text, x, y):
         line_text  = text.splitlines()

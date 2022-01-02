@@ -51,8 +51,8 @@ class AutoTypewriter():
         self.running = False
         self.t = None
 
-    def press_key(self, keys):
-        emit, receive, shift_pressed, code_pressed = keys
+    def press_key(self, char):
+        emit, receive, shift_pressed, code_pressed = keys_dict[char]
         if shift_pressed:
             emit_shift, receive_shift, shift_pressed_shift, code_pressed_shift = keys_dict["shift"]
             emit_shift_lck, receive_shift_lck, shift_pressed_shift_lck, code_pressed_shift_lck = keys_dict["shiftlock"]
@@ -86,12 +86,14 @@ class AutoTypewriter():
                 GPIO.output(receive, GPIO.input(emit))
             GPIO.output(receive, 1)
         sleep(0.1)
+        if char == "\n":
+            sleep(0.2)
 
-    def underline_press_key(self, keys):
-        self.press_key(keys)
-        self.press_key(keys_dict["return"])
-        self.press_key(keys_dict["return"])
-        self.press_key(keys_dict["_"])
+    def underline_press_key(self, char):
+        self.press_key(char)
+        self.press_key("return")
+        self.press_key("return")
+        self.press_key("_")
 
     def press_string(self, string):
         self.running = True
@@ -100,7 +102,7 @@ class AutoTypewriter():
                 self.cancel_action = False
                 print("Break press_string")
                 break
-            self.press_key(keys_dict[char])
+            self.press_key(char)
         self.running = False
 
     # use  '@@' to delimit
@@ -120,9 +122,9 @@ class AutoTypewriter():
                 str_index+=1
             else:
                 if underline_enabled:
-                    self.underline_press_key(keys_dict[string[str_index]])
+                    self.underline_press_key(string[str_index])
                 else:
-                    self.press_key(keys_dict[string[str_index]])
+                    self.press_key(string[str_index])
             str_index +=1
         
         self.running = False
@@ -134,7 +136,7 @@ class AutoTypewriter():
                 self.cancel_action = False
                 print("Break underline_press_string")
                 break
-            self.underline_press_key(keys_dict[char])
+            self.underline_press_key(char)
         self.running = False
 
     def wait_cancel_thread(self):
