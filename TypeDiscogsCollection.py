@@ -42,11 +42,11 @@ with open(FILE_PATH, newline='', encoding="utf-8") as csvfile:
             if row[8] == CATEGORY_KEY:
                 vinyl_row.append(row)     
         i+=1
-    vinyl_row = sorted(vinyl_row, key=lambda x: (x[1],x[RELEASED_YEAR]))
+    vinyl_row = sorted(vinyl_row, key=lambda x: (x[ARTIST][4:] if "The " in x[ARTIST][0:4] else x[ARTIST] ,x[RELEASED_YEAR]))
     first_letter = " "
     last_first_letter = " "
     for row in vinyl_row:
-        first_letter = row[ARTIST][0]
+        first_letter = row[ARTIST][4:][0] if "The " in row[ARTIST][0:4] else row[ARTIST][0]
         if last_first_letter != first_letter:
             vinyl_formated_lines.append("@@"+first_letter+"@@")
             final_len+=1
